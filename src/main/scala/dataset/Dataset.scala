@@ -1,9 +1,13 @@
 package dataset
 
 import dataset.util.Commit.Commit
+import org.joda.time.LocalDate
+import org.json4s.{Formats, NoTypeHints}
+import org.json4s.native.Serialization
 
 import java.text.SimpleDateFormat
 import java.util.SimpleTimeZone
+import scala.io.Source
 import scala.math.Ordering.Implicits._
 
 /**
@@ -17,6 +21,11 @@ import scala.math.Ordering.Implicits._
  */
 object Dataset {
 
+  def main(args: Array[String]): Unit = {
+    implicit val formats: AnyRef with Formats = Serialization.formats(NoTypeHints)
+    val source: List[Commit] = Source.fromResource("1000_commits.json").getLines().map(Serialization.read[Commit]).toList
+    print(topCommitter(source,"termux/termux-packages"))
+  }
 
   /** Q23 (4p)
    * For the commits that are accompanied with stats data, compute the average of their additions.
@@ -25,7 +34,10 @@ object Dataset {
    * @param input the list of commits to process.
    * @return the average amount of additions in the commits that have stats data.
    */
-  def avgAdditions(input: List[Commit]): Int = ???
+  def avgAdditions(input: List[Commit]): Int = {
+    val list = input.filter(c => c.stats.isDefined).map(c => c.stats.get.additions)
+    list.sum / list.size
+  }
 
   /** Q24 (4p)
    * Find the hour of day (in 24h notation, UTC time) during which the most javascript (.js) files are changed in commits.
@@ -36,7 +48,9 @@ object Dataset {
    * @param input list of commits to process.
    * @return the hour and the amount of files changed during this hour.
    */
-  def jsTime(input: List[Commit]): (Int, Int) = ???
+  def jsTime(input: List[Commit]) = {
+
+  }
 
 
   /** Q25 (5p)
@@ -48,7 +62,13 @@ object Dataset {
    * @param repo  the repository name to consider.
    * @return the name and amount of commits for the top committer.
    */
-  def topCommitter(input: List[Commit], repo: String): (String, Int) = ???
+  def topCommitter(input: List[Commit], repo: String)= {
+    //val repos =
+    //input.map(c => c.url).map(c => (c.split('/')(4) + '/' + c.split('/')(5))).filter(x => x == repo)
+    //val commits =
+    input.filter(c => c.url.split('/')(4) + '/' + c.url.split('/')(5) == repo).groupBy(c => c )
+
+  }
 
   /** Q26 (9p)
    * For each repository, output the name and the amount of commits that were made to this repository in 2019 only.

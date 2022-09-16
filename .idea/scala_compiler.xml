@@ -7,5 +7,11 @@
         <parameter value="C:\Users\Marcin Jarosz\Desktop\scala testing\fp\target/.scala_dependencies" />
       </parameters>
     </profile>
+    <profile name="Maven 2" modules="fp">
+      <parameters>
+        <parameter value="-dependencyfile" />
+        <parameter value="C:\Users\Marcin Jarosz\Desktop\Big Data Processing\fp\target/.scala_dependencies" />
+      </parameters>
+    </profile>
   </component>
 </project>

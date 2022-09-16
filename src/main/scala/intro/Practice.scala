@@ -83,15 +83,19 @@ object Practice {
    */
   def even(x: Int): Boolean = x % 2 == 0
 
-  def helper[A](xs: List[A], f: A => Boolean, index: Int): List[A] = (xs, f, even(index)) match {
-    case (Nil, _, _) => Nil
-    case (x :: y, f, false) => if (f(x))
-      x :: helper(y, f, 1 + index)
-    else
-      helper(y, f, 1 + index)
-    case (x :: y, f, true) => helper(y, f, 1 + index)
 
+
+  def helper[A](xs: List[A], f: A => Boolean, index: Int): List[A] = (xs,even(index)) match {
+    case (Nil,_) => Nil
+    case (x :: y , true) => if (f(x))
+        helper(y, f, index + 1)
+      else
+        helper(y, f, index)
+    case (x :: y, false) => if(f(x))
+        x::helper(y, f, index + 1)
+      else
+        helper(y, f, index)
   }
 
-  def myFilter[A](xs: List[A], f: A => Boolean): List[A] = helper(xs, f, 0)
+  def myFilter[A](xs: List[A], f: A => Boolean): List[A] = helper(xs,f, 1)
 }

@@ -186,7 +186,10 @@ object FPFunctions {
       * @tparam B result type of mapping function.
       * @return a list of all items in `xs` mapped with `f`.
       */
-    def map[A, B](xs: List[A], f: A => B): List[B] = ???
+    def map[A, B](xs: List[A], f: A => B): List[B] = xs match {
+        case x :: y =>f(x)::map[A, B](y, f)
+        case Nil => Nil
+    }
 
     /** Q15 (5p)
       * Takes a function that returns a boolean and returns all elements that satisfy it.
@@ -195,7 +198,12 @@ object FPFunctions {
       * @tparam A the type of the items in `xs`.
       * @return a list of all items in `xs` that satisfy `f`.
       */
-    def filter[A](xs: List[A], f: A => Boolean): List[A] = ???
+    def filter[A](xs: List[A], f: A => Boolean): List[A] = xs match {
+        case x::y => if(f(x))
+                x:: filter(y,f)
+            else filter(y,f)
+        case Nil => Nil
+    }
 
     /** Q16 (5p)
       * Recursively flattens a list that may contain more lists into 1 list.
@@ -204,7 +212,14 @@ object FPFunctions {
       * @param xs the list to flatten.
       * @return one list containing all items in `xs`.
       */
-    def recFlat(xs: List[Any]): List[Any] = ???
+    def recFlat(xs: List[Any]): List[Any] = xs match {
+        case x::y => helper(x) ::: recFlat(y)
+        case Nil => Nil
+    }
+    def helper(x : Any):List[Int] = x match {
+        case x: Int => x::Nil
+        case x: List[Int] =>  x:::Nil
+    }
 
     /** Q17 (5p)
       * Takes `f` of 2 arguments and an `init` value and combines the elements by applying `f` on the result of each previous application.
@@ -215,7 +230,10 @@ object FPFunctions {
       * @tparam B the result type of the fold function.
       * @return the result of folding `xs` with `f`.
       */
-    def foldL[A, B](xs: List[A], f: (B, A) => B, init: B): B = ???
+    def foldL[A, B](xs: List[A], f: (B, A) => B, init: B): B = xs match {
+        case Nil => init
+        case x::y => foldL(y, f, f(init, x))
+    }
 
     /** Q18 (5p)
       * Reuse `foldL` to define `foldR`.
@@ -228,8 +246,15 @@ object FPFunctions {
       * @tparam B the result type of the fold function.
       * @return the result of folding `xs` with `f`.
       */
-    def foldR[A, B](xs: List[A], f: (A, B) => B, init: B): B = ???
+    def foldR[A, B](xs: List[A], f: (A, B) => B, init: B): B = {
+        val reversedList = reverse(xs)
+        foldL(reversedList, (b:B,a:A)=> f(a,b), init)
+    }
 
+    def reverse[A](xs: List[A]): List[A] = xs match {
+        case Nil => Nil
+        case x::y => reverse(y) ::: List(x)
+    }
     /** Q19 (5p)
       * Returns an iterable collection formed by iterating over the corresponding items of `xs` and `ys`.
       * If one list is shorter, stop when there are no more elements to process in this list.
@@ -240,5 +265,9 @@ object FPFunctions {
       * @tparam B the type of the items in `ys`.
       * @return a list of tuples of items in `xs` and `ys`.
       */
-    def zip[A, B](xs: List[A], ys: List[B]): List[(A, B)] = ???
+    def zip[A, B](xs: List[A], ys: List[B]): List[(A, B)] = (xs,ys) match {
+        case (Nil,_) => Nil
+        case(_,Nil) => Nil
+        case(a::b,x::y) => (a,x) :: zip(b,y)
+    }
 }
