@@ -6,7 +6,7 @@ import org.json4s.{Formats, NoTypeHints}
 import org.json4s.native.Serialization
 
 import java.text.SimpleDateFormat
-import java.util.SimpleTimeZone
+import java.util.{Calendar, Date, SimpleTimeZone}
 import scala.io.Source
 import scala.math.Ordering.Implicits._
 
@@ -21,12 +21,6 @@ import scala.math.Ordering.Implicits._
  */
 object Dataset {
 
-  //USE THIS TO DEBUG YOUR CODE
-  def main(args: Array[String]): Unit = {
-    implicit val formats: AnyRef with Formats = Serialization.formats(NoTypeHints)
-    val source: List[Commit] = Source.fromResource("1000_commits.json").getLines().map(Serialization.read[Commit]).toList
-    topCommitter(source, "termux/termux-packages")
-  }
 
   /** Q23 (4p)
    * For the commits that are accompanied with stats data, compute the average of their additions.
@@ -50,11 +44,20 @@ object Dataset {
    * @return the hour and the amount of files changed during this hour.
    */
   def jsTime(input: List[Commit]) = {
-    val jsFiles = input.flatMap(c => c.files).filter(f => f.filename.get.slice(f.filename.get.size-2,f.filename.get.size)=="js")
-    val jsCommits = input.filter(c => jsFiles.exists(c.files.contains))
-    val commitsByHour = jsCommits.groupBy(x => x.commit.committer.date.getHours)//TODO: fix the hours
-    val mostActiveHour = commitsByHour.map(x => (x._1,x._2.size)).map(x => (x._2,x._1)).toList.sorted.take(1).map(x => (x._2,x._1)).toList(0)
+    val jsFiles = input.flatMap(c => c.files).filter(f => f.filename.get.slice(f.filename.get.size-3,f.filename.get.size)==".js")
+    val jsCommits = input.filter(c=> jsFiles.intersect(c.files).nonEmpty)
+
+    val commitsByHour = jsCommits.groupBy(x => getHour(x.commit.committer.date))
+    val mostActiveHour = commitsByHour.map(x => (x._1,x._2.flatMap(c => c.files).intersect(jsFiles).size)).map(x => (x._2,x._1))
+      .toList.sorted.reverse.take(1).map(x => (x._2,x._1)).toList(0)
     mostActiveHour
+  }
+
+  def getHour(time: Date): Int ={
+    val timeZone = new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC")
+    val hour = new SimpleDateFormat("HH")
+    hour.setTimeZone(timeZone)
+    hour.format(time).toInt
   }
 
 
@@ -85,11 +88,17 @@ object Dataset {
    *         Map("KosDP1987/students" -> 1, "giahh263/HQWord" -> 2)
    */
   def commitsPerRepo(input: List[Commit]): Map[String, Int] = {
-    //val commitsIn2019 = input.filter(c => c.commit.committer.date.getYear == 2019) //TODO: fix this line (filter the year) then delete the line below
-    val commitsIn2019 = input
+    val commitsIn2019 = input.filter(c => getYear(c.commit.committer.date) == 2019)
     val commitsByRepo = commitsIn2019.groupBy(c => (c.url.split('/')(4) + '/' + c.url.split('/')(5)))
     val numberOfCommitsByRepo = commitsByRepo.map(x => (x._1, x._2.size))
     numberOfCommitsByRepo
+  }
+
+  def getYear(time: Date): Int = {
+    val year = new SimpleDateFormat("YYYY")
+    val timeZone = new SimpleTimeZone(SimpleTimeZone.UTC_TIME, "UTC")
+    year.setTimeZone(timeZone)
+    year.format(time).toInt
   }
 
 
@@ -122,21 +131,20 @@ object Dataset {
    *
    * Hint: for the time, use `SimpleDateFormat` and `SimpleTimeZone`.
    */
-  def mostProductivePart(input: List[Commit]): (String, Int) = { //TODO: Write a test for this and fix the hour extraction in the next line
-    val commitsByTime = input.groupBy(c => c.commit.committer.date.getHours)
-    val commitsByPart = commitsByTime.map(x => (dayPart(x._1), x._2)).map(x => (x._1, x._2.size))
-    val mostProductivePart = commitsByPart.toList.map(x => (x._2,x._1)).sorted.take(1).map(x => (x._2,x._1)).toList(0)
+  def mostProductivePart(input: List[Commit]): (String, Int) = {
+    val commitsByTime = input.groupBy(c => dayPart(getHour(c.commit.committer.date)))
+    val commitsByPart = commitsByTime.map(x => (x._1, x._2.size))
+    val mostProductivePart = commitsByPart.toList.map(x => (x._2,x._1)).sorted.reverse.take(1).map(x => (x._2,x._1)).toList(0)
     mostProductivePart
   }
 
-  //Not sure if this works correctly
   def dayPart(hour: Int): String = {
-    if(5<hour && 12>hour)
-      return "Morning"
-    if(12<hour && 17>hour)
-      return "Afternoon"
-    if(17<hour && 21>hour)
-      return "Evening"
-    "Night"
+    if(5<=hour && 12>hour)
+      return "morning"
+    if(12<=hour && 17>hour)
+      return "afternoon"
+    if(17<=hour && 21>hour)
+      return "evening"
+    "night"
   }
 }
