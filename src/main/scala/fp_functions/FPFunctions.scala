@@ -218,7 +218,10 @@ object FPFunctions {
     }
     def helper(x : Any):List[Int] = x match {
         case x: Int => x::Nil
-        case x: List[Int] =>  x:::Nil
+        case x: List[Int] =>  x match {
+            case Nil => Nil
+            case a::b => a::helper(b)
+        }
     }
 
     /** Q17 (5p)
